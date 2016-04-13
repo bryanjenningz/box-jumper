@@ -1,4 +1,4 @@
-var SPACEBAR = 32, jumped = false;
+var SPACEBAR = 32, S_KEY = 83, jumped = false;
 
 function createCanvas(width = 200, height = 200) {
   var canvas = document.createElement('canvas');
@@ -29,6 +29,7 @@ function update(state) {
   state.context.clearRect(0, 0, 200, 200);
   state.pipes.forEach((pipe) => drawPipe(state.context, pipe.x, pipe.openIndex));
   drawBox(state.context, state.box.x, state.box.y);
+  if (isCollision(state)) return;
   requestAnimationFrame(function() { update(state); });
 }
 
@@ -48,19 +49,33 @@ function updatePipes(pipes) {
 
 function drawPipe(context, x, openIndex) {
   context.fillRect(x, 0, 20, openIndex * 20);
-  context.fillRect(x, (openIndex + 2) * 20, 20, 200 - (openIndex + 1));
+  context.fillRect(x, (openIndex + 3) * 20, 20, 200 - (openIndex + 1));
 }
 
 function generatePipe() {
-  var openIndex = Math.floor(Math.random() * 7) + 1;
+  var openIndex = Math.floor(Math.random() * 6) + 1;
   return {x: 190, openIndex};
 }
 
+function isCollision(state) {
+  var boxLeft = state.box.x, boxRight = state.box.x + 20,
+    boxTop = state.box.y, boxBottom = state.box.y + 20;
+  return state.pipes.some((pipe) => {
+    var pipeLeft = pipe.x, pipeRight = pipe.x + 20,
+      openingTop = pipe.openIndex * 20, openingBottom = (pipe.openIndex + 3) * 20;
+    return pipeLeft <= boxRight && pipeRight >= boxLeft &&
+      (openingTop > boxTop || openingBottom < boxBottom);
+  });
+}
+
 function init() {
-  update({box: createBox(), context: createCanvas(), pipes: [generatePipe()]});
+  context = createCanvas();
+  context.fillText('Press S to start and SPACEBAR to jump', 7, 95);
   addEventListener('keydown', function jump(e) {
     if (e.keyCode === SPACEBAR) {
       jumped = true;
+    } else if (e.keyCode === S_KEY) {
+      update({box: createBox(), context: context, pipes: [generatePipe()]});
     }
   });
 }
