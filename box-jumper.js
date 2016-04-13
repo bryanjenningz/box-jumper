@@ -27,8 +27,13 @@ function update(state) {
   state.box = updateVelocity(state.box);
   state.pipes = updatePipes(state.pipes);
   state.context.clearRect(0, 0, 200, 200);
+  if (!state.pipes[0].passed && state.pipes[0].x < state.box.x) {
+    state.score += 1;
+    state.pipes[0].passed = true;
+  }
   state.pipes.forEach((pipe) => drawPipe(state.context, pipe.x, pipe.openIndex));
   drawBox(state.context, state.box.x, state.box.y);
+  context.fillText(state.score, 12, 12);
   if (isCollision(state)) return;
   requestAnimationFrame(function() { update(state); });
 }
@@ -44,7 +49,8 @@ function updatePipes(pipes) {
   if (pipes.slice(-1)[0].x <= 50) {
     pipes = pipes.concat(generatePipe());
   }
-  return pipes.map((pipe) => Object.assign({}, pipe, {x: pipe.x - 2}));
+  return pipes.filter((pipe) => pipe.x > -20)
+    .map((pipe) => Object.assign({}, pipe, {x: pipe.x - 2}));
 }
 
 function drawPipe(context, x, openIndex) {
@@ -75,7 +81,7 @@ function init() {
     if (e.keyCode === SPACEBAR) {
       jumped = true;
     } else if (e.keyCode === S_KEY) {
-      update({box: createBox(), context: context, pipes: [generatePipe()]});
+      update({box: createBox(), context: context, pipes: [generatePipe()], score: 0});
     }
   });
 }
